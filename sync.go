@@ -28,7 +28,7 @@ func SyncIP(config *Config) error {
 
 	// if IPs match, nothing to do
 	if ip == actual {
-		slog.Info("No IP change")
+		slog.Info("No IP change (resolved)")
 		return nil
 	}
 
@@ -36,6 +36,12 @@ func SyncIP(config *Config) error {
 	record, err := GetARecord(config, config.FullyQualifiedDomainName())
 	if err != nil {
 		return err
+	}
+
+	// if IPs match, nothing to do
+	if record.Content == actual {
+		slog.Info("No IP change (retrieved record)")
+		return nil
 	}
 
 	// Update the A record in Cloudflare
