@@ -32,6 +32,19 @@ func SyncIP(config *Config) error {
 		return nil
 	}
 
+	// Get the record
+	record, err := GetARecord(config, config.FullyQualifiedDomainName())
+	if err != nil {
+		return err
+	}
+
+	// Update the A record in Cloudflare
+	slog.Info("updating IP address for FQDN", "fqdn", config.FullyQualifiedDomainName(), "oldip", ip, "newip", actual)
+	if err = UpdateIP(config, record.ID, actual); err != nil {
+		return err
+	}
+	slog.Info("ip updated successfully")
+
 	return nil
 }
 
@@ -73,14 +86,41 @@ func ResolveHost(config *Config) (string, error) {
 	return ips[0], nil
 }
 
+// Retrieve the record by name
+func GetARecord(config *Config, name string) (cloudflare.DNSRecord, error) {
+	records, ri, err := config.CloudflareAPI.ListDNSRecords(
+		context.Background(),
+		config.CloudflareZoneID,
+		cloudflare.ListDNSRecordsParams{
+			Name: name,
+			Type: "A",
+		},
+	)
+
+	if err != nil {
+		return cloudflare.DNSRecord{}, err
+	}
+
+	switch ri.Count {
+	case 0:
+		return cloudflare.DNSRecord{}, fmt.Errorf("no A records found for %s", name)
+	case 1:
+	default:
+		return cloudflare.DNSRecord{}, fmt.Errorf("multiple A records found for %s", name)
+	}
+
+	return records[0], nil
+}
+
 // UpdateIP updates the IP address for the DNS record.
-func UpdateIP(config *Config, ip string) (err error) {
+func UpdateIP(config *Config, recordID, ip string) (err error) {
 	_, err = config.CloudflareAPI.UpdateDNSRecord(
 		context.Background(),
 		config.CloudflareZoneID,
 		cloudflare.UpdateDNSRecordParams{
 			Type:    "A",
 			Name:    config.DNSRecordName,
+			ID:      recordID,
 			Content: ip,
 		},
 	)
