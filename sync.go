@@ -29,6 +29,7 @@ func SyncIP(config *Config) error {
 	// if IPs match, nothing to do
 	if ip == actual {
 		slog.Info("No IP change (resolved)")
+		config.Metrics.SyncNoChangeCounter.Inc()
 		return nil
 	}
 
@@ -41,6 +42,7 @@ func SyncIP(config *Config) error {
 	// if IPs match, nothing to do
 	if record.Content == actual {
 		slog.Info("No IP change (retrieved record)")
+		config.Metrics.SyncNoChangeCounter.Inc()
 		return nil
 	}
 
@@ -49,6 +51,7 @@ func SyncIP(config *Config) error {
 	if err = UpdateIP(config, record.ID, actual); err != nil {
 		return err
 	}
+	config.Metrics.SyncUpdatedCounter.Inc()
 	slog.Info("ip updated successfully")
 
 	return nil
