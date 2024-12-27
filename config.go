@@ -16,6 +16,8 @@ type Config struct {
 	DNSRecordName    string
 	CloudflareAPI    *cloudflare.API
 	CloudflareZoneID *cloudflare.ResourceContainer
+	HealthzAddr      string
+	Metrics          *Metrics
 }
 
 func (c *Config) FullyQualifiedDomainName() string {

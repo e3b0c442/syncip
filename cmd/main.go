@@ -18,6 +18,7 @@ var (
 	interval           string
 	resolverIP         string
 	cloudflareAPIToken string
+	metricsAddr        string
 )
 var config = &syncip.Config{}
 
@@ -29,6 +30,8 @@ func init() {
 	flag.StringVar(&config.DNSZoneName, "dns-zone-name", envOrDefault("DNS_ZONE_NAME", ""), "zone name")
 	flag.StringVar(&config.DNSRecordName, "dns-record-name", envOrDefault("DNS_RECORD_NAME", "@"), "record name")
 	flag.StringVar(&cloudflareAPIToken, "cloudflare-api-token", envOrDefault("CLOUDFLARE_API_TOKEN", ""), "cloudflare api token")
+	flag.StringVar(&config.HealthzAddr, "healthz-addr", envOrDefault("HEALTHZ_ADDR", ":8080"), "healthz addr")
+	flag.StringVar(&metricsAddr, "metrics-addr", envOrDefault("METRICS_ADDR", ":58288"), "metrics addr")
 }
 
 func main() {
@@ -75,6 +78,8 @@ func main() {
 		log.Fatal(err)
 	}
 	config.CloudflareZoneID = cloudflare.ZoneIdentifier(zoneID)
+
+	config.Metrics = syncip.InitMetrics(metricsAddr)
 
 	log.Fatal(syncip.Run(config))
 }
