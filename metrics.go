@@ -39,6 +39,8 @@ func InitMetrics(addr string) *Metrics {
 
 	prometheus.MustRegister(
 		metrics.SyncCounter,
+		metrics.SyncSucceededCounter,
+		metrics.SyncFailedCounter,
 	)
 
 	metrics.Server = &http.Server{
